@@ -120,24 +120,61 @@ def plotPie(fracs, countries, year):
     #show()
     savefig(path + 'info/figures/' + year + '.png')
 
-def plotBar():
+def plotBarNordic():
     nordic_countries = ('denmark', 'finland', 'norway', 'sweden')
-    nordic_freq = recordNordic(nordic_countries)
-    N = 6 
-    ind = arange(N)
-    width = .2
-    rects = {} 
+    nordic_freq = filterFreq(nordic_countries)
+    print nordic_freq
+    years = ('2010', '2011', '2012', '2013', '2014', '2015')
+    colors = ['r', 'b', 'g', 'y']
     fig, ax = plt.subplots()
     ax.set_ylabel('Number of awardees')
     ax.set_title('Number by country')
+    plotBar(nordic_countries, nordic_freq, years, colors, ax, 'nordic')
+
+def loadFinData(years):
+    init_app = [] 
+    with open(path + 'data/finland/init_app.csv') as fr:
+        for line in fr:
+            year = line.split(',')[0]
+            num = line.split(',')[1][:-1]
+            init_app.append(int(num))
+    first_round = [] 
+    for year in years:
+        num = 0
+        with open(path + 'data/finland/finland_' + year + '.txt') as fr:
+            for line in fr:
+                num = num + 1
+        first_round.append(num)
+    return init_app, first_round
+
+def plotBarFinland():
+    categories = ('init_app', 'first_round', 'award')
+    freq_award = filterFreq(['finland'])
+    years = ('2012', '2013', '2014', '2015')
+    init_app, first_app = loadFinData(years)
+    freq = {}
+    freq['init_app'] = init_app
+    freq['first_round'] = first_app
+    freq['award'] = freq_award['finland'][2:]
+    colors = ['b', 'g', 'y']
+    fig, ax = plt.subplots()
+    ax.set_ylabel('Number of students')
+    ax.set_title('Number by rounds')
+    plotBar(categories, freq, years, colors, ax, 'finland')
+
+def plotBar(categories, freq, years, colors, ax, name):
+    N = len(years)
+    ind = arange(N)
+    width = .2
+    rects = {} 
     ax.set_xticks(ind + width)
-    ax.set_xticklabels(('2010', '2011', '2012', '2013', '2014', '2015'))
-    colors = ['r', 'b', 'g', 'y']
-    for idx, c in enumerate(nordic_countries):
-        rects[c] = ax.bar(ind + idx*width, nordic_freq[c], width, color=colors[idx])
+    ax.set_xticklabels(years)
+    print freq
+    for idx, c in enumerate(categories):
+        rects[c] = ax.bar(ind + idx*width, freq[c], width, color=colors[idx])
         autolabel(rects[c], ax)
-    ax.legend((rects[nordic_countries[0]], rects[nordic_countries[1]],rects[nordic_countries[2]], rects[nordic_countries[3]]), nordic_countries)
-    savefig(path + 'info/figures/' + 'nordic.png')
+    ax.legend((rects[categories[0]], rects[categories[1]],rects[categories[2]]), categories)
+    savefig(path + 'info/figures/' + name + '.png')
 
 def autolabel(rects, ax):
     # attach some text labels
@@ -147,7 +184,7 @@ def autolabel(rects, ax):
                 '%d' % int(height),
                 ha='center', va='bottom')
 
-def recordNordic(nordic_countries):
+def filterFreq(nordic_countries):
     nordic_freq = {}
     for c in nordic_countries:
         nordic_freq[c] = []
@@ -174,8 +211,9 @@ def main():
     # toCSV(year)
     #fracs, freq, countries = analysis(year)
     #plotStat(fracs, countries, year)
-    #plotBar()
-    recordRare()
+    #plotBarNordic()
+    plotBarFinland()
+    #recordRare()
 
 if __name__ == '__main__':
     main()
