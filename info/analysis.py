@@ -6,6 +6,9 @@ import openpyxl
 import csv
 import sys
 from pylab import *
+import matplotlib.pyplot as plt
+sys.path.insert(0, '/homeappl/home/gcao/fa/misc')
+from fileproc import loadstr, writestr
 
 path = '/wrk/gcao/Dataset/government_award/'
 
@@ -115,18 +118,28 @@ def plotPie(fracs, countries, year):
                     # so the plotting starts on the positive y-axis.
     title('The fractions of awarded students by country in ' + year, bbox={'facecolor':'0.8', 'pad':5})
     #show()
-    savefig(path + 'info/' + year + '.png')
+    savefig(path + 'info/figures/' + year + '.png')
 
 def plotBar():
-    nordic = ('finland', 'sweden', 'norway', 'denmark')
-    N = 4
+    nordic_countries = ('denmark', 'finland', 'norway', 'sweden')
+    nordic_freq = recordNordic(nordic_countries)
+    N = 6 
     ind = arange(N)
     width = .2
-    rects = []
-    #for 
-    rects1 = ax.bar(ind, menMeans, width, color='r', yerr=menStd)
+    rects = {} 
+    fig, ax = plt.subplots()
+    ax.set_ylabel('Number of awardees')
+    ax.set_title('Number by country')
+    ax.set_xticks(ind + width)
+    ax.set_xticklabels(('2010', '2011', '2012', '2013', '2014', '2015'))
+    colors = ['r', 'b', 'g', 'y']
+    for idx, c in enumerate(nordic_countries):
+        rects[c] = ax.bar(ind + idx*width, nordic_freq[c], width, color=colors[idx])
+        autolabel(rects[c], ax)
+    ax.legend((rects[nordic_countries[0]], rects[nordic_countries[1]],rects[nordic_countries[2]], rects[nordic_countries[3]]), nordic_countries)
+    savefig(path + 'info/figures/' + 'nordic.png')
 
-def autolabel(rects):
+def autolabel(rects, ax):
     # attach some text labels
     for rect in rects:
         height = rect.get_height()
@@ -134,8 +147,7 @@ def autolabel(rects):
                 '%d' % int(height),
                 ha='center', va='bottom')
 
-def recordNordic():
-    nordic_countries = ('finland', 'sweden', 'norway', 'denmark')
+def recordNordic(nordic_countries):
     nordic_freq = {}
     for c in nordic_countries:
         nordic_freq[c] = []
@@ -143,7 +155,17 @@ def recordNordic():
         fracs, freq, countries = analysis(year)
         for c in nordic_countries:
             nordic_freq[c].append(freq[c])
-    print nordic_freq
+    return nordic_freq
+
+def recordRare():
+    rare_countries = {}
+    for year in range(2010, 2016):
+        rare_countries[year] = {} 
+        fracs, freq, countries = analysis(year)
+        for c in countries:
+            if freq[c] < 3 and freq[c] > 0:
+                rare_countries[year][c] = freq[c]
+    writestr(path + 'info/figures/rare.txt', [rare_countries])
 
 def main():
     #year = sys.argv[1]
@@ -152,7 +174,8 @@ def main():
     # toCSV(year)
     #fracs, freq, countries = analysis(year)
     #plotStat(fracs, countries, year)
-    recordNordic()
+    #plotBar()
+    recordRare()
 
 if __name__ == '__main__':
     main()
